@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Храмы</title>
+<link rel="manifest" href="manifest.json"><meta name="theme-color" content="#17302f"><link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--ink:#17302f;--river:#2d6a6a;--gold:#c9962b}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden}
+body{font:16px/1.6 'Segoe UI',system-ui,Arial,sans-serif;color:var(--ink);background:#4d6b3d}
+#vp{position:fixed;inset:0;overflow:hidden;touch-action:none;background:#4d6b3d;cursor:grab}#vp:active{cursor:grabbing}
+#stage{position:absolute;left:0;top:0;transform-origin:0 0;user-select:none}
+#bg{display:block;width:100%;height:auto;-webkit-user-drag:none}
+.title{position:fixed;z-index:5;left:12px;top:12px;background:var(--ink);color:#fff;padding:9px 16px;border-radius:3px;font:700 19px Georgia,serif}
+.title small{display:block;font:400 12px Arial,sans-serif;opacity:.75}
+.zc{position:fixed;right:14px;bottom:14px;z-index:5;display:flex;flex-direction:column;gap:6px}
+.zc button{width:46px;height:46px;border:0;border-radius:4px;background:var(--ink);color:#fff;font:700 22px Arial,sans-serif;cursor:pointer}
+.lb{position:absolute;white-space:nowrap;color:#fff;font:700 14px Georgia,serif;line-height:1;pointer-events:none;transform:translate(-50%,-50%) rotate(var(--r,0deg)) scale(var(--k,1));text-shadow:-1px -1px 0 #1d2a22,1px -1px 0 #1d2a22,-1px 1px 0 #1d2a22,1px 1px 0 #1d2a22,0 0 6px #1d2a22}
+.lb.place{text-transform:uppercase;letter-spacing:.14em;color:#fffbe8}.lb.street{font-family:Arial,Helvetica,sans-serif;font-weight:600}.lb.water{font-style:italic;letter-spacing:.3em;color:#e8f6ff}
+.lb.zo{display:none}#stage.zin .lb.zo{display:block}
+.mk{position:absolute;transform:translate(-50%,-50%) scale(var(--k,1));min-width:28px;padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mk img,.mk svg{display:block;width:100%;height:auto;filter:drop-shadow(0 2px 3px #0006);transition:transform .15s}
+.mk.major img,.mk.major svg{filter:drop-shadow(0 0 7px #c9962bcc) drop-shadow(0 2px 3px #0006)}
+.mk:hover img,.mk:hover svg,.mk:focus-visible img,.mk:focus-visible svg{transform:scale(1.1)}
+.mk .nm{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:4px;white-space:nowrap;background:var(--ink);color:#fff;padding:2px 9px;border-radius:3px;font-weight:700;font-size:calc(var(--nmsize,14)*1px);font-family:var(--lbfont,Georgia,serif);opacity:0;transition:opacity .15s;pointer-events:none}
+.mk.major .nm,.mk:hover .nm,.mk:focus-visible .nm{opacity:1}
+#page{position:fixed;inset:0;z-index:1000;display:none}#page.open{display:block}
+</style></head><body>
+<div id="vp"><div id="stage"><img id="bg" alt="Карта"></div></div>
+<div class="title"><span id="st">Храмы</span><small>нажмите на храм</small></div>
+<div class="zc"><button id="zi" aria-label="Приблизить">+</button><button id="zo" aria-label="Отдалить">−</button><button id="zf" aria-label="Вся карта">⤢</button><button id="zs" aria-label="Во весь экран" hidden>⛶</button></div>
+<section id="page"></section>
+<script src="page.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+function h(t,a,...c){const e=document.createElement(t);for(const k in a||{}){if(k.startsWith('on'))e[k]=a[k];else e.setAttribute(k,a[k])}c.flat().forEach(x=>e.append(x));return e}
+const FM='<svg viewBox="0 0 24 32"><path d="M12 1v5M9.5 3.5h5" stroke="#17302f" stroke-width="1.6"/><path d="M12 6c5 4 7.5 7 7.5 11 0 2-1.5 3-3 3h-9c-1.5 0-3-1-3-3C4.5 13 7 10 12 6z" fill="#c9962b" stroke="#17302f" stroke-width="1.4"/><path d="M6 20h12v10H6z" fill="#f4f1ea" stroke="#17302f" stroke-width="1.4"/><path d="M10.5 30v-5a1.5 1.5 0 013 0v5" fill="#17302f"/></svg>';
+const FN='<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#2d6a6a" stroke="#fff" stroke-width="2.5"/></svg>';
+function panzoom(vp,st,o){o=o||{};
+ let s=1,x=0,y=0,min=1,cover=1;const ptrs=new Map();
+ const calc=()=>{const W=vp.clientWidth,H=vp.clientHeight,w=st.offsetWidth||1,hh=st.offsetHeight||1;min=Math.min(W/w,H/hh);cover=Math.max(W/w,H/hh)};
+ const clamp=()=>{const W=vp.clientWidth,H=vp.clientHeight,w=st.offsetWidth*s,hh=st.offsetHeight*s;x=w<=W?(W-w)/2:Math.min(0,Math.max(W-w,x));y=hh<=H?(H-hh)/2:Math.min(0,Math.max(H-hh,y))};
+ const apply=()=>{clamp();st.style.transform=`translate(${x}px,${y}px) scale(${s})`;st.style.setProperty('--k',1/s);st.classList.toggle('zin',s>=cover*1.8)};
+ const fit=()=>{if(!st.offsetWidth)return;calc();s=o.cover?cover:min;const f=o.focus?o.focus():{x:50,y:50};x=vp.clientWidth/2-st.offsetWidth*s*f.x/100;y=vp.clientHeight/2-st.offsetHeight*s*f.y/100;apply()};
+ const zoomAt=(cx,cy,f)=>{const ns=Math.min(cover*15,Math.max(min,s*f)),k=ns/s;x=cx-(cx-x)*k;y=cy-(cy-y)*k;s=ns;apply()};
+ const center=f=>zoomAt(vp.clientWidth/2,vp.clientHeight/2,f);
+ vp.addEventListener('wheel',e=>{e.preventDefault();const r=vp.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*(e.deltaMode?0.05:0.0015)))},{passive:false});
+ vp.addEventListener('pointerdown',e=>{if(e.target.closest('.mk,.lb,.zc'))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});vp.setPointerCapture(e.pointerId)});
+ vp.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;const nx=e.clientX,ny=e.clientY;
+  if(ptrs.size===1){x+=nx-p.x;y+=ny-p.y;apply()}
+  else if(ptrs.size===2){const q=[...ptrs.values()].find(z=>z!==p),d0=Math.hypot(p.x-q.x,p.y-q.y),d1=Math.hypot(nx-q.x,ny-q.y),r=vp.getBoundingClientRect();if(d0>0)zoomAt((nx+q.x)/2-r.left,(ny+q.y)/2-r.top,d1/d0)}
+  p.x=nx;p.y=ny});
+ const end=e=>ptrs.delete(e.pointerId);vp.addEventListener('pointerup',end);vp.addEventListener('pointercancel',end);
+ addEventListener('resize',()=>{if(!st.offsetWidth)return;const was=o.cover?s<=cover*1.001:s<=min*1.001;calc();if(was)fit();else{s=Math.max(s,min);apply()}});
+ return{fit,zi:()=>center(1.5),zo:()=>center(1/1.5)}}
+let focus={x:50,y:50},DATA,byId={};
+const pz=panzoom($('#vp'),$('#stage'),{cover:true,focus:()=>focus});$('#zi').onclick=pz.zi;$('#zo').onclick=pz.zo;$('#zf').onclick=pz.fit;
+if(document.fullscreenEnabled){$('#zs').hidden=false;$('#zs').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen()}
+function route(){const t=byId[location.hash.slice(1)],p=$('#page');
+ if(t){PG.render(p,t,DATA,{onBack:()=>{location.hash=''}});p.classList.add('open')}else{p.classList.remove('open');p.replaceChildren()}}
+addEventListener('hashchange',route);addEventListener('keydown',e=>{if(e.key==='Escape'&&!e.pgHandled)location.hash=''});
+fetch('data/temples.json',{cache:'no-store'}).then(r=>r.json()).then(D=>{DATA=D;PG.loadFonts(D);
+ document.title=D.siteTitle;$('#st').textContent=D.siteTitle;
+ const stg=$('#stage');stg.style.setProperty('--nmsize',D.nameSize||14);if(D.labelFont)stg.style.setProperty('--lbfont',PG.fontStack(D.labelFont));
+ $('#bg').onload=()=>{stg.style.width=$('#bg').naturalWidth+'px';pz.fit()};$('#bg').src=D.background;
+ const med=a=>{a=a.slice().sort((u,v)=>u-v);return a[Math.floor(a.length/2)]};
+ if(D.temples.length)focus={x:med(D.temples.map(t=>t.x)),y:med(D.temples.map(t=>t.y))};
+ (D.labels||[]).forEach(l=>{const e=h('div',{class:'lb '+(l.style||'poi')+(l.zin?' zo':'')},l.text);const ff=l.font||D.labelFont;
+  e.style.cssText=`left:${l.x}%;top:${l.y}%;font-size:${(l.size||14)*(D.labelScale||100)/100}px;${ff?'font-family:'+PG.fontStack(ff)+';':''}--r:${l.rot||0}deg`;stg.append(e)});
+ D.temples.forEach(t=>{PG.migrate(t);byId[t.id]=t;
+  const b=h('button',{class:'mk'+(t.major?' major':''),title:t.name,style:`left:${t.x}%;top:${t.y}%;width:${t.size||(t.major?2.6:2)}%`,onclick:()=>{location.hash=t.id}});
+  if(t.icon)b.append(h('img',{src:t.icon,alt:t.name,draggable:'false'}));else b.insertAdjacentHTML('beforeend',t.major?FM:FN);
+  b.append(h('span',{class:'nm'},t.name));stg.append(b)});
+ route();
+ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+ if('caches' in window){const urls=new Set([D.background]);const bgu=p=>p&&p.bg&&p.bg.image&&urls.add(p.bg.image);bgu(D.pageDefault);(D.fonts||[]).forEach(f=>urls.add(f.url));
+  D.temples.forEach(t=>{if(t.icon)urls.add(t.icon);(t.albums||[]).forEach(a=>(a.photos||[]).forEach(u=>urls.add(u)));bgu(t.page);if(t.game&&t.game.type==='html'&&t.game.url)urls.add(t.game.url)});
+  caches.open('v2').then(c=>urls.forEach(u=>{if(u)c.match(u).then(m=>m||c.add(u)).catch(()=>{})}))}
+}).catch(()=>{$('#st').textContent='Не удалось загрузить данные'});
+</script></body></html>

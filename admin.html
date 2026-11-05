@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Редактор</title>
+<style>
+:root{--ink:#17302f;--river:#2d6a6a;--stone:#eceee9;--gold:#c9962b;--line:#cfd6d0}
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 'PT Sans',system-ui,sans-serif;color:var(--ink);background:var(--stone)}
+#login{max-width:340px;margin:20vh auto;padding:20px;background:#fff;border-radius:4px}
+#app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+@media(max-width:800px){#app{grid-template-columns:1fr}}
+nav{background:var(--ink);color:#fff;padding:14px}
+nav button,nav a{display:block;width:100%;text-align:left;margin:4px 0;padding:9px 10px;border:0;border-radius:3px;background:none;color:#fff;font:inherit;cursor:pointer;text-decoration:none}
+nav button.on{background:#ffffff26}nav .add{background:var(--gold);color:var(--ink);font-weight:700;text-align:center;margin:12px 0}
+main{padding:0 18px 40px;max-width:1000px}
+#bar{position:sticky;top:0;z-index:20;background:var(--stone);padding:12px 0;display:flex;gap:14px;align-items:center;border-bottom:1px solid var(--line)}
+#savebtn{padding:12px 22px;border:0;border-radius:4px;background:var(--ink);color:#fff;font:700 17px inherit;font-family:inherit;cursor:pointer}
+#savebtn.hot{background:var(--gold);color:var(--ink)}#stt{font-size:14px;color:#5b6d6c}
+#vp{position:relative;height:72vh;margin-top:12px;overflow:hidden;touch-action:none;background:#dfe3dc;border-radius:4px;cursor:grab}
+#stage{position:absolute;left:0;top:0;transform-origin:0 0;user-select:none}
+#stage>img{display:block;width:100%;height:auto;-webkit-user-drag:none}
+.zc{position:absolute;right:10px;bottom:10px;z-index:5;display:flex;flex-direction:column;gap:6px}
+.zc button{width:40px;height:40px;border:0;border-radius:4px;background:var(--ink);color:#fff;font-size:20px;cursor:pointer}
+.lb{position:absolute;white-space:nowrap;color:#fff;font:700 14px Georgia,'PT Serif',serif;line-height:1;transform:translate(-50%,-50%) rotate(var(--r,0deg)) scale(var(--k,1));text-shadow:-1px -1px 0 #1d2a22,1px -1px 0 #1d2a22,-1px 1px 0 #1d2a22,1px 1px 0 #1d2a22,0 0 6px #1d2a22}
+.lb.place{text-transform:uppercase;letter-spacing:.14em;color:#fffbe8}.lb.street{font-family:Arial,Helvetica,sans-serif;font-weight:600}.lb.water{font-style:italic;letter-spacing:.3em;color:#e8f6ff}
+.lb{cursor:grab;touch-action:none}.lb.zo{opacity:.8}.lb.sel{outline:2px dashed var(--gold);outline-offset:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;max-height:190px;overflow:auto;margin:10px 0}.chips button.on{background:var(--ink);color:#fff}
+.rte{border:1px solid var(--line);border-radius:6px;background:#fff}.rtb{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px;border-bottom:1px solid var(--line);background:#f4f5f7;position:sticky;top:58px;z-index:5}
+.rtbtn{padding:5px 9px;border:1px solid var(--line);background:#fff;border-radius:4px;cursor:pointer;font:14px inherit}.rtbtn:hover{background:#eef}.rtc{font-size:13px;display:inline-flex;align-items:center;gap:4px}.rtcol{width:30px!important;height:26px!important}.rtsel{width:auto!important;padding:4px!important;font-size:13px}
+.rted{min-height:220px;padding:14px;font:17px/1.65 Georgia,serif;outline:none}
+.phs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.pc{width:124px}.pc img{width:124px;height:92px;object-fit:contain;background:#eceef2;border-radius:4px;display:block}.pcb{display:flex;gap:2px;margin-top:3px}.pcb button{flex:1;padding:3px 0;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:12px;border-radius:3px}
+.vrow{border-top:1px dashed var(--line);padding-top:6px;margin-top:8px}
+.pgprev{height:70vh;border:1px solid var(--line);border-radius:6px;overflow:hidden;position:relative;margin:10px 0}.dz h4{margin:18px 0 6px}
+.bcard{border:1px solid var(--line);border-radius:6px;margin:8px 0;background:#fafaf7}.bhead{display:flex;gap:8px;align-items:center;padding:8px 10px;flex-wrap:wrap}.bhead b{flex:1;min-width:130px}.grip{cursor:grab;color:#889}.bset{padding:0 12px 12px;border-top:1px solid var(--line)}
+input[type=color]{width:46px;height:34px;padding:0;border:1px solid var(--line);border-radius:3px;background:#fff}
+.mk{position:absolute;transform:translate(-50%,-50%) scale(var(--k,1));min-width:26px;cursor:grab;touch-action:none}
+.mk:active{cursor:grabbing}.mk img,.mk svg{display:block;width:100%;height:auto;pointer-events:none}
+.mk.sel{outline:2px dashed var(--gold);outline-offset:4px}
+.mk .nm{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:3px;white-space:nowrap;background:var(--ink);color:#fff;padding:1px 7px;border-radius:3px;font-size:calc(var(--nmsize,14)*1px);font-family:var(--lbfont,Georgia,serif);pointer-events:none}
+.f{display:block;margin:12px 0}.f>span{display:block;font-weight:700;margin-bottom:3px}
+input[type=text],textarea,select{width:100%;padding:9px;font:inherit;border:1px solid var(--line);border-radius:3px;background:#fff}
+input[type=range]{width:100%}textarea{min-height:200px}
+section{background:#fff;padding:14px 16px;margin:16px 0;border-radius:4px}section h3{margin:0 0 6px}
+.row{display:flex;gap:6px;align-items:center;margin:6px 0}.row .u{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:#5b6d6c}
+.th{width:56px;height:42px;object-fit:cover;background:var(--stone)}
+button.s{padding:6px 10px;border:1px solid var(--line);background:#fff;border-radius:3px;cursor:pointer;font:inherit}
+button.red{color:#a33}.hint{font-size:13px;color:#5b6d6c;margin:4px 0}
+.q{border:1px solid var(--line);padding:10px;margin:10px 0;border-radius:3px}
+</style></head><body>
+<div id="login"><h2>Вход в редактор</h2><form id="lf"><input type="text" id="pw" placeholder="Пароль" autocomplete="off"><p id="le" style="color:#a33"></p><button class="s">Войти</button></form><p class="hint">Пароль записан в файле config.txt</p></div>
+<div id="app" hidden><nav id="side"></nav><main><div id="bar"><button id="savebtn">Сохранить изменения</button><span id="stt">Всё сохранено</span></div><div id="stageWrap"></div><div id="ed"></div></main></div>
+<script src="page.js"></script>
+<script src="admin-design.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+function h(t,a,...c){const e=document.createElement(t);for(const k in a||{}){if(k.startsWith('on'))e[k]=a[k];else e.setAttribute(k,a[k])}c.flat().forEach(x=>e.append(x));return e}
+const FM='<svg viewBox="0 0 24 32"><path d="M12 1v5M9.5 3.5h5" stroke="#17302f" stroke-width="1.6"/><path d="M12 6c5 4 7.5 7 7.5 11 0 2-1.5 3-3 3h-9c-1.5 0-3-1-3-3C4.5 13 7 10 12 6z" fill="#c9962b" stroke="#17302f" stroke-width="1.4"/><path d="M6 20h12v10H6z" fill="#f4f1ea" stroke="#17302f" stroke-width="1.4"/></svg>';
+const FN='<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#2d6a6a" stroke="#fff" stroke-width="2.5"/></svg>';
+let pw=localStorage.getItem('pw')||'',D,sel=-1,mks=[],isDirty=false;
+function setDirty(v){isDirty=v;$('#savebtn').classList.toggle('hot',v);$('#stt').textContent=v?'Есть несохранённые изменения':'Всё сохранено'}
+const mark=()=>setDirty(true);
+const dsize=t=>t.size||(t.major?2.6:2);
+async function login(p){const r=await fetch('api/auth',{headers:{'X-Password':p}});return r.ok}
+$('#lf').onsubmit=async e=>{e.preventDefault();const p=$('#pw').value.trim();if(await login(p)){pw=p;localStorage.setItem('pw',p);start()}else $('#le').textContent='Неверный пароль'};
+async function shrink(file,max,alpha){
+ const url=URL.createObjectURL(file);
+ try{const img=new Image();img.src=url;await img.decode();
+  const w=img.naturalWidth,hh=img.naturalHeight,k=Math.min(1,max/Math.max(w,hh));
+  if(k===1&&file.size<3e6)return null;
+  const c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(hh*k);
+  c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  const tb=(t,q)=>new Promise(r=>c.toBlob(r,t,q));
+  let b=await tb('image/webp',0.9),ext='webp';
+  if(!b||b.type!=='image/webp'){if(alpha){b=await tb('image/png');ext='png'}else{b=await tb('image/jpeg',0.9);ext='jpg'}}
+  return b?{blob:b,ext}:null
+ }finally{URL.revokeObjectURL(url)}}
+async function up(file,max,alpha){let blob=file,ext=(file.name.split('.').pop()||'').toLowerCase();
+ if(max&&/^image\/(png|jpeg|webp)/.test(file.type)){const r=await shrink(file,max,alpha);if(r){blob=r.blob;ext=r.ext}}
+ const x=await fetch('api/upload?ext='+encodeURIComponent(ext),{method:'POST',headers:{'X-Password':pw},body:blob});if(!x.ok)throw new Error(await x.text());return(await x.json()).url}
+$('#savebtn').onclick=async()=>{const b=$('#savebtn');b.textContent='Сохраняю…';const r=await fetch('api/data',{method:'POST',headers:{'X-Password':pw},body:JSON.stringify(D,null,1)});b.textContent='Сохранить изменения';if(r.ok){setDirty(false);$('#stt').textContent='Сохранено ✓'}else alert('Не удалось сохранить: '+await r.text())};
+async function start(){D=await(await fetch('data/temples.json',{cache:'no-store'})).json();if(!D.labels){try{D.labels=await(await fetch('data/labels_default.json',{cache:'no-store'})).json()}catch(e){D.labels=[]}}PG.loadFonts(D);D.temples.forEach(PG.migrate);if(!D.pageDefault)D.pageDefault=PG.defaultPage();$('#login').hidden=true;$('#app').hidden=false;side();initStage();drawStage();ed()}
+if(pw)login(pw).then(ok=>ok&&start());
+addEventListener('beforeunload',e=>{if(isDirty){e.preventDefault();e.returnValue=''}});
+function side(){$('#side').replaceChildren(h('button',{class:sel===-1?'on':'',onclick:()=>select(-1)},'⚙ Настройки сайта'),
+ ...D.temples.map((t,i)=>h('button',{class:i===sel?'on':'',onclick:()=>select(i)},(t.major?'★ ':'')+t.name)),
+ h('button',{class:'add',onclick:()=>{D.temples.push({id:'t'+Date.now(),name:'Новый храм',x:+pz.centerPct().x.toFixed(2),y:+pz.centerPct().y.toFixed(2),size:0,icon:'',major:false,history:'',albums:[],playlists:[],game:{type:'none',url:'',questions:[]}});sel=D.temples.length-1;mark();side();drawStage();ed()}},'+ Добавить храм'),
+ h('button',{class:sel===-2?'on':'',onclick:()=>{sel=-2;selL=-1;side();updSel();drawStage();ed()}},'Аа Надписи на карте ('+(D.labels||[]).length+')'),
+ h('a',{href:'index.html',target:'_blank'},'Открыть сайт ↗'))}
+function updSel(){mks.forEach((m,k)=>m.classList.toggle('sel',k===sel));labs.forEach((m,k)=>m.classList.toggle('sel',sel===-2&&k===selL))}
+function select(i){sel=i;side();updSel();ed()}
+function selectL(i){sel=-2;selL=i;side();updSel();ed()}
+function panzoom(vp,st,o){o=o||{};
+ let s=1,x=0,y=0,min=1,cover=1;const ptrs=new Map();
+ const calc=()=>{const W=vp.clientWidth,H=vp.clientHeight,w=st.offsetWidth||1,hh=st.offsetHeight||1;min=Math.min(W/w,H/hh);cover=Math.max(W/w,H/hh)};
+ const clamp=()=>{const W=vp.clientWidth,H=vp.clientHeight,w=st.offsetWidth*s,hh=st.offsetHeight*s;x=w<=W?(W-w)/2:Math.min(0,Math.max(W-w,x));y=hh<=H?(H-hh)/2:Math.min(0,Math.max(H-hh,y))};
+ const apply=()=>{clamp();st.style.transform=`translate(${x}px,${y}px) scale(${s})`;st.style.setProperty('--k',1/s);st.classList.toggle('zin',s>=cover*1.8)};
+ const fit=()=>{if(!st.offsetWidth)return;calc();s=o.cover?cover:min;const f=o.focus?o.focus():{x:50,y:50};x=vp.clientWidth/2-st.offsetWidth*s*f.x/100;y=vp.clientHeight/2-st.offsetHeight*s*f.y/100;apply()};
+ const zoomAt=(cx,cy,f)=>{const ns=Math.min(cover*15,Math.max(min,s*f)),k=ns/s;x=cx-(cx-x)*k;y=cy-(cy-y)*k;s=ns;apply()};
+ const center=f=>zoomAt(vp.clientWidth/2,vp.clientHeight/2,f);
+ vp.addEventListener('wheel',e=>{e.preventDefault();const r=vp.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*(e.deltaMode?0.05:0.0015)))},{passive:false});
+ vp.addEventListener('pointerdown',e=>{if(e.target.closest('.mk,.lb,.zc'))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});vp.setPointerCapture(e.pointerId)});
+ vp.addEventListener('pointermove',e=>{const p=ptrs.get(e.pointerId);if(!p)return;const nx=e.clientX,ny=e.clientY;
+  if(ptrs.size===1){x+=nx-p.x;y+=ny-p.y;apply()}
+  else if(ptrs.size===2){const q=[...ptrs.values()].find(z=>z!==p),d0=Math.hypot(p.x-q.x,p.y-q.y),d1=Math.hypot(nx-q.x,ny-q.y),r=vp.getBoundingClientRect();if(d0>0)zoomAt((nx+q.x)/2-r.left,(ny+q.y)/2-r.top,d1/d0)}
+  p.x=nx;p.y=ny});
+ const end=e=>ptrs.delete(e.pointerId);vp.addEventListener('pointerup',end);vp.addEventListener('pointercancel',end);
+ addEventListener('resize',()=>{if(!st.offsetWidth)return;const was=o.cover?s<=cover*1.001:s<=min*1.001;calc();if(was)fit();else{s=Math.max(s,min);apply()}});
+ return{fit,zi:()=>center(1.5),zo:()=>center(1/1.5),centerPct:()=>({x:(vp.clientWidth/2-x)/s/st.offsetWidth*100,y:(vp.clientHeight/2-y)/s/st.offsetHeight*100})}}
+let pz,labs=[],selL=-1;
+function initStage(){const w=$('#stageWrap');const bg=h('img',{id:'bgimg',draggable:'false'});const st=h('div',{id:'stage'},bg);
+ const vp=h('div',{id:'vp'},st,h('div',{class:'zc'},h('button',{onclick:()=>pz.zi(),title:'Приблизить'},'+'),h('button',{onclick:()=>pz.zo(),title:'Отдалить'},'−'),h('button',{onclick:()=>pz.fit(),title:'Вся карта'},'⤢')));
+ bg.onload=()=>{st.style.width=bg.naturalWidth+'px';pz.fit()};
+ w.append(vp,h('p',{class:'hint'},'Колёсико мыши — приблизить и отдалить, перетаскивание карты — сдвиг. Перетащите значок храма или надпись на нужное место, нажмите — изменить данные. Не забудьте «Сохранить изменения».'));
+ pz=panzoom(vp,st,{});bg.src=D.background||''}
+function drawStage(){const st=$('#stage'),bg=$('#bgimg');st.style.setProperty('--nmsize',D.nameSize||14);if(D.labelFont)st.style.setProperty('--lbfont',PG.fontStack(D.labelFont));else st.style.removeProperty('--lbfont');if(bg.getAttribute('src')!==(D.background||''))bg.src=D.background||'';
+ st.querySelectorAll('.mk,.lb').forEach(m=>m.remove());mks=[];labs=[];
+ (D.labels||[]).forEach((l,i)=>{const b=h('div',{class:'lb '+(l.style||'poi')+(l.zin?' zo':'')+(sel===-2&&i===selL?' sel':'')},l.text);
+  const ff=l.font||D.labelFont;b.style.cssText=`left:${l.x}%;top:${l.y}%;font-size:${(l.size||14)*(D.labelScale||100)/100}px;${ff?'font-family:'+PG.fontStack(ff)+';':''}--r:${l.rot||0}deg`;let drag=false;
+  b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);drag=true;if(!(sel===-2&&selL===i))selectL(i)};
+  b.onpointermove=e=>{if(!drag)return;const r=st.getBoundingClientRect();
+   l.x=+Math.min(100,Math.max(0,(e.clientX-r.left)/r.width*100)).toFixed(2);l.y=+Math.min(100,Math.max(0,(e.clientY-r.top)/r.height*100)).toFixed(2);
+   b.style.left=l.x+'%';b.style.top=l.y+'%';mark()};
+  b.onpointerup=b.onpointercancel=()=>{drag=false};labs.push(b);st.append(b)});
+ D.temples.forEach((t,i)=>{const b=h('div',{class:'mk'+(i===sel?' sel':''),style:`left:${t.x}%;top:${t.y}%;width:${dsize(t)}%`});
+  if(t.icon)b.append(h('img',{src:t.icon}));else b.insertAdjacentHTML('beforeend',t.major?FM:FN);
+  b.append(h('span',{class:'nm'},t.name));let drag=false;
+  b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);drag=true;if(sel!==i)select(i)};
+  b.onpointermove=e=>{if(!drag)return;const r=st.getBoundingClientRect();
+   t.x=+Math.min(100,Math.max(0,(e.clientX-r.left)/r.width*100)).toFixed(2);t.y=+Math.min(100,Math.max(0,(e.clientY-r.top)/r.height*100)).toFixed(2);
+   b.style.left=t.x+'%';b.style.top=t.y+'%';mark()};
+  b.onpointerup=b.onpointercancel=()=>{drag=false};
+  mks.push(b);st.append(b)})}
+const mv=(a,i,d)=>{const j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]]};
+function inp(o,k){const i=h('input',{type:'text'});i.value=o[k]??'';i.oninput=()=>{o[k]=i.value;mark()};return i}
+const fld=(l,el)=>h('label',{class:'f'},h('span',{},l),el);
+function pick(accept,multi,onfile,max,alpha){const fi=h('input',{type:'file',accept,...(multi?{multiple:''}:{})});const st=h('span',{class:'hint'});fi.onchange=async()=>{for(const f of fi.files){try{st.textContent='Загрузка «'+f.name+'»… большие картинки уменьшаются автоматически, подождите';await onfile(await up(f,max,alpha),f)}catch(e){alert('Ошибка: '+e.message)}}st.textContent='';fi.value=''};return h('div',{},fi,' ',st)}
+function ed(){const E=$('#ed');E.replaceChildren();
+ if(sel===-2){D.labels=D.labels||[];const L=D.labels[selL];
+  E.append(h('h2',{},'Надписи на карте'),h('p',{class:'hint'},'Перетащите надпись на карте мышью или выберите из списка ниже.'),
+   h('button',{class:'s',onclick:()=>{const c=pz.centerPct();D.labels.push({id:'l'+Date.now(),text:'Новая надпись',x:+c.x.toFixed(2),y:+c.y.toFixed(2),size:16,rot:0,style:'poi',zin:false});selL=D.labels.length-1;mark();side();drawStage();ed()}},'+ Новая надпись'),
+   h('div',{class:'chips'},...D.labels.map((l,i)=>h('button',{class:'s'+(i===selL?' on':''),onclick:()=>selectL(i)},l.text))));
+  if(L){const redraw=()=>{drawStage();mark()};
+   const tx=inp(L,'text');tx.addEventListener('input',()=>{redraw();$('.chips .on')&&($('.chips .on').textContent=L.text)});
+   const sl=h('select',{},h('option',{value:'place'},'Район / город (крупно, заглавными)'),h('option',{value:'poi'},'Обычная надпись'),h('option',{value:'street'},'Улица (мелко)'),h('option',{value:'water'},'Вода (курсив)'));sl.value=L.style||'poi';sl.onchange=()=>{L.style=sl.value;redraw()};
+   const lfs=h('select',{},h('option',{value:''},'Как у всех надписей'),PG.fontNames().map(n=>h('option',{value:n},n)));lfs.value=L.font||'';lfs.onchange=()=>{L.font=lfs.value;redraw()};
+   const rg=(o,k,mn,mx,st,u)=>{const r=h('input',{type:'range',min:mn,max:mx,step:st});r.value=o[k]||0;const v=h('span',{},r.value+u);r.oninput=()=>{o[k]=+r.value;v.textContent=r.value+u;redraw()};return h('div',{class:'row'},r,v)};
+   const zc=h('input',{type:'checkbox'});zc.checked=!!L.zin;zc.onchange=()=>{L.zin=zc.checked;redraw()};
+   E.append(h('section',{},h('h3',{},'Выбранная надпись'),fld('Текст',tx),fld('Вид',sl),fld('Шрифт',lfs),fld('Размер',rg(L,'size',8,70,1,' px')),fld('Поворот',rg(L,'rot',-90,90,1,'°')),
+    h('label',{class:'f'},zc,' Показывать только при приближении карты'),
+    h('button',{class:'s red',onclick:()=>{if(confirm('Удалить надпись «'+L.text+'»?')){D.labels.splice(selL,1);selL=-1;mark();side();drawStage();ed()}}},'Удалить надпись')))}
+  return}
+ if(sel<0){const bgi=inp(D,'background');bgi.addEventListener('change',drawStage);E.append(h('h2',{},'Настройки сайта'),fld('Название сайта',inp(D,'siteTitle')),fld('Файл карты (например map_kasimov_real.webp)',bgi),globalFontsBox(),
+  h('section',{},h('h3',{},'Фотография карты'),h('p',{class:'hint'},'Это фон главной страницы. Лучше широкая картинка (jpg, png или webp).'),pick('image/*',false,u=>{D.background=u;drawStage();mark()},5000)));return}
+ const t=D.temples[sel];
+ const cb=h('input',{type:'checkbox'});cb.checked=!!t.major;cb.onchange=()=>{t.major=cb.checked;mark();side();drawStage()};
+ const nm=inp(t,'name');nm.addEventListener('input',()=>{side();mks[sel]&&(mks[sel].querySelector('.nm').textContent=t.name)});
+ const rg=h('input',{type:'range',min:'0.5',max:'10',step:'0.1'});rg.value=dsize(t);const rv=h('span',{},rg.value+'%');
+ rg.oninput=()=>{t.size=+rg.value;rv.textContent=rg.value+'%';mks[sel].style.width=t.size+'%';mark()};
+ const hist=h('textarea',{});hist.value=t.history||'';hist.oninput=()=>{t.history=hist.value;mark()};
+ E.append(h('h2',{},'Храм'),fld('Название',nm),fld('Подзаголовок под названием (необязательно)',inp(t,'subtitle')),h('label',{class:'f'},cb,' Крупный храм (подсвечен, подпись видна всегда)'),
+  h('section',{},h('h3',{},'Значок на карте'),h('p',{class:'hint'},'Загрузите png (лучше с прозрачным фоном). Без значка показывается простой символ.'),
+   t.icon?h('div',{class:'row'},h('img',{class:'th',src:t.icon}),h('button',{class:'s red',onclick:()=>{t.icon='';drawStage();ed();mark()}},'Убрать значок')):'',
+   pick('image/*',false,u=>{t.icon=u;drawStage();ed();mark()},600,true),fld('Размер значка ',h('div',{class:'row'},rg,rv))),
+  h('section',{},h('h3',{},'История (текст с форматированием)'),richEditor(()=>t.history,v=>{t.history=v;mark()})),
+  h('section',{},h('h3',{},'Фотоальбомы'),albumsBox(t)),h('section',{},h('h3',{},'Видео и плейлисты'),videosBox(t)),h('section',{},h('h3',{},'Мини-игра'),game(t)),h('section',{},h('h3',{},'Страница храма: дизайн'),designBox(t)),
+  h('p',{},h('button',{class:'s red',onclick:()=>{if(confirm('Удалить «'+t.name+'»?')){D.temples.splice(sel,1);sel=-1;mark();side();drawStage();ed()}}},'Удалить этот храм')))}
+function photos(t){const box=h('div');t.photos=t.photos||[];
+ const draw=()=>{box.replaceChildren(...t.photos.map((u,i)=>h('div',{class:'row'},h('img',{class:'th',src:u}),h('span',{class:'u'},u),
+  h('button',{class:'s',onclick:()=>{mv(t.photos,i,-1);draw();mark()}},'↑'),h('button',{class:'s',onclick:()=>{mv(t.photos,i,1);draw();mark()}},'↓'),
+  h('button',{class:'s red',onclick:()=>{t.photos.splice(i,1);draw();mark()}},'Убрать'))),
+  pick('image/*',true,u=>{t.photos.push(u);draw();mark()},2400),h('p',{class:'hint'},'Первое фото показывается крупно вверху страницы храма.'))};draw();return box}
+function video(t){const box=h('div');const draw=()=>{box.replaceChildren(fld('Ссылка на YouTube / Rutube или файл',inp(t,'video')),
+  pick('video/*',false,u=>{t.video=u;draw();mark()}),h('p',{class:'hint'},'Загрузите видео (mp4) или вставьте ссылку. Чтобы убрать — очистите поле.'))};draw();return box}
+function game(t){const box=h('div');t.game=t.game||{type:'none',url:'',questions:[]};const g=t.game;g.questions=g.questions||[];
+ const draw=()=>{const sl=h('select',{},h('option',{value:'none'},'Без игры'),h('option',{value:'quiz'},'Викторина (вопросы и ответы)'),h('option',{value:'html'},'Своя игра (html-файл)'));sl.value=g.type;sl.onchange=()=>{g.type=sl.value;draw();mark()};box.replaceChildren(sl);
+  if(g.type==='quiz'){g.questions.forEach((q,i)=>{const d=h('div',{class:'q'},fld('Вопрос '+(i+1),inp(q,'q')));
+    q.answers.forEach((a,j)=>{const r=h('input',{type:'radio',name:'c'+i});r.checked=q.correct===j;r.onchange=()=>{q.correct=j;mark()};const ai={get v(){return q.answers[j]},set v(x){q.answers[j]=x}};
+     d.append(h('div',{class:'row'},r,inp(ai,'v'),h('button',{class:'s red',onclick:()=>{if(q.answers.length>2){q.answers.splice(j,1);if(q.correct>=q.answers.length)q.correct=0;draw();mark()}}},'✕')))});
+    d.append(h('p',{class:'hint'},'Отметьте кружком правильный ответ.'),h('button',{class:'s',onclick:()=>{q.answers.push('');draw();mark()}},'+ вариант'),' ',h('button',{class:'s red',onclick:()=>{g.questions.splice(i,1);draw();mark()}},'Удалить вопрос'));box.append(d)});
+   box.append(h('button',{class:'s',onclick:()=>{g.questions.push({q:'',answers:['',''],correct:0});draw();mark()}},'+ Добавить вопрос'))}
+  if(g.type==='html')box.append(fld('Адрес игры',inp(g,'url')),pick('.html',false,u=>{g.url=u;draw();mark()}),h('p',{class:'hint'},'Загрузите готовый один html-файл. Игра из нескольких файлов: положите папку в www/games и впишите адрес, например games/puzzle/index.html'))};
+ draw();return box}
+</script></body></html>
